@@ -1,0 +1,84 @@
+!obj:pylearn2.train.Train {
+    dataset: &train !obj:convnet.icdar2013.ICDAR2013 {
+        data_path: '../datasets/synthetic/',
+        which_set: 'english_basic_cropped_images',
+        groundtruth: 'english_basic_cropped_labels'
+    },
+    model: !obj:pylearn2.models.mlp.MLP {
+        input_space: !obj:pylearn2.space.Conv2DSpace {
+            shape: [32, 32],
+            num_channels: 1
+        },
+        layers: [ !obj:pylearn2.models.mlp.ConvRectifiedLinear {
+                     layer_name: 'h2',
+                     output_channels: 64,
+                     irange: .05,
+                     kernel_shape: [5, 5],
+                     pool_shape: [4, 4],
+                     pool_stride: [2, 2],
+                     max_kernel_norm: 1.9365
+                 },!obj:pylearn2.models.mlp.ConvRectifiedLinear {
+                     layer_name: 'h3',
+                     output_channels: 64,
+                     irange: .05,
+                     kernel_shape: [5, 5],
+                     pool_shape: [4, 4],
+                     pool_stride: [2, 2],
+                     max_kernel_norm: 1.9365
+                 },!obj:pylearn2.models.mlp.Softmax {
+                     max_col_norm: 1.9365,
+                     layer_name: 'y',
+                     n_classes: 2,
+                     istdev: .05
+                 }
+                ],
+    },
+    algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {
+        batch_size: 100,
+        learning_rate: .01,
+        train_iteration_mode: 'even_shuffled_sequential',
+        learning_rule: !obj:pylearn2.training_algorithms.learning_rule.Momentum {
+            init_momentum: .5
+        },
+        monitoring_dataset:
+            {
+                'train' : *train,
+                'valid' : !obj:convnet.icdar2013.ICDAR2013 {
+                              data_path: '../datasets/synthetic/',
+                              which_set: 'end_net_test',
+                              groundtruth: 'end_net_labels',
+                          }
+            },
+        cost: !obj:pylearn2.costs.cost.SumOfCosts { costs: [
+            !obj:pylearn2.costs.mlp.Default {
+            }, !obj:pylearn2.costs.mlp.WeightDecay {
+                coeffs: [ .00005, .00005, .05 ]
+            }
+            ]
+        },
+        termination_criterion: !obj:pylearn2.termination_criteria.And {
+            criteria: [
+                !obj:pylearn2.termination_criteria.MonitorBased {
+                    channel_name: "valid_y_misclass",
+                    prop_decrease: 0.,
+                    N: 100
+                },
+                !obj:pylearn2.termination_criteria.EpochCounter {
+                    max_epochs: 15
+                }
+            ]
+        },
+    },
+    extensions: [
+        !obj:pylearn2.train_extensions.best_params.MonitorBasedSaveBest {
+             channel_name: 'valid_y_misclass',
+             save_path: "convnet_best_test.pkl"
+        }, !obj:pylearn2.training_algorithms.learning_rule.MomentumAdjustor {
+            start: 1,
+            saturate: 10,
+            final_momentum: .99
+        }
+    ],
+    save_path: "./convolutional_network_best.pkl",
+    save_freq: 1
+}
