@@ -37,11 +37,12 @@ def get_groundtruth_area(filename):
     if not os.path.exists(filename):
         return None
     with open(filename) as f:
-        reader = csv.reader(f, delimiter=' ')
+        reader = csv.reader(f, delimiter=',')
         for row in reader:
             row = [int(float(i)) for i in row]
             (x0, y0, x1, y1) = row
-            result.extend([[y0, x0, y1, x1]])
+            # result.extend([[y0, x0, y1, x1]])
+            result.extend([[x0, y0, x1, y1]])  # This works for ICDAR2013
 
     return result
 
@@ -127,7 +128,9 @@ def crop_image_with_groundtruth(cv_image, groundtruth, destination_dir,
 
     k = crop_part_image(cv_image, groundtruth, destination_dir, w, h, tag,
                         postfix=postfix_pos, short_name=short_name,
-                        inc_h=10, inc_w=10, is_positive=True)
+                        inc_h=12, inc_w=12, is_positive=True)
+
+    print("Positive: ", k)
 
     crop_negative_part(cv_image, groundtruth, destination_dir, w, h, tag,
                        postfix=postfix_neg, short_name=short_name,
@@ -223,14 +226,14 @@ synthetic_english_basic_cropped_labels = "../datasets/synthetic/english_basic_cr
 
 
 make_full_work_dataset(
-    images_dir="../datasets/icdar2003_train/ryoungt_03.09.2002/",
+    images_dir="/Users/endermz/spbu/coursework/2015/datasets/icdar2013/train/small/",
     w=32,
     h=32,
     learn_size=0.0,
     val_size=0.2,
-    groundtruth_dir="../datasets/icdar2003_train/groundtruth/ryoungt_03.09.2002/",
+    groundtruth_dir="/Users/endermz/spbu/coursework/2015/datasets/icdar2013/train/MRRCTrainLocalization/",
     tag="icdar2003",
-    destination="../datasets/icdar2003_processed/",
+    destination="/Users/endermz/spbu/coursework/2015/datasets/icdar2013/train/result/",
     postfix_pos="positive",
     postfix_neg="negative"
 )
