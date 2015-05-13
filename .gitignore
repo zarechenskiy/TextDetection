@@ -3,3 +3,9 @@
 /results
 .idea/workspace.xml
 *.pyc
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
